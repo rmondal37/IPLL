@@ -1,0 +1,54 @@
+00000 COPY      START     0                                                
+00000           EXTDEF    BUFFER,BUFEND,LENGTH                                                
+00000           EXTREF    RDREC,WRREC                                                
+00000 FIRST     STL       RETADR                                                
+00003 CLOOP     +JSUB     RDREC                                                
+00007           LDA       LENGTH                                                
+0000A           COMP      #0                                                
+0000D           JEQ       ENDFIL                                                
+00010           +JSUB     WRREC                                                
+00014           J         CLOOP                                                
+00017 ENDFIL    LDA       =C'EOF'                                                
+0001A           STA       BUFFER                                                
+0001D           LDA       #3                                                
+00020           STA       LENGTH                                                 
+00023           +JSUB     WRREC                                                
+00027           J         @RETADR                                                
+0002A RETADR    RESW      1                                                
+0002D LENGTH    RESW      1                                                
+00030           LTORG                                                 
+00030 *                   454F46                        
+00033 BUFFER    RESB      4096                                                
+01033 BUFEND    EQU       *                                                
+01033 MAXLEN    EQU       BUFEND-BUFFER                                                
+00000 RDREC     CSECT                                                
+00000           EXTREF    BUFFER,LENGTH,BUFEND                                                
+00000           CLEAR     X                                                
+00002           CLEAR     A                                                
+00004           CLEAR     S                                                
+00006           LDT       MAXLEN                                                
+00009 RLOOP     TD        INPUT                                                
+0000C           JEQ       RLOOP                                                
+0000F           RD        INPUT                                                
+00012           COMPR     A,S                                                 
+00014           JEQ       EXIT                                                
+00017           +STCH     BUFFER,X                                                
+0001B           TIXR      T                                                 
+0001D           JLT       RLOOP                                                 
+00020 EXIT      +STX      LENGTH                                                
+00024           RSUB                                                
+00027 INPUT     BYTE      X'F1'                                                
+00028 MAXLEN    WORD      BUFEND-BUFFER                                                
+00000 WRREC     CSECT                                                
+00000           EXTREF    LENGTH,BUFFER                                                
+00000           CLEAR     X                                                
+00002           +LDT      LENGTH                                                
+00006 WLOOP     TD        =X'05'                                                
+00009           JEQ       WLOOP                                                
+0000C           +LDCH     BUFFER,X                                                
+00010           WD        =X'05'                                                
+00013           TIXR      T                                                 
+00015           JLT       WLOOP                                                
+00018           RSUB                                                 
+0001B *                   05                            
+0001C           END       FIRST                                                 
